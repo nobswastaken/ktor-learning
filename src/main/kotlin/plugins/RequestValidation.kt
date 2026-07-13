@@ -7,8 +7,12 @@ import io.ktor.server.plugins.requestvalidation.ValidationResult
 
 fun Application.configureRequestValidation() {
     install(RequestValidation){
-        validate<String> {body ->
-            if (body.isBlank()) ValidationResult.Invalid("Body is empty")
+
+
+        validate<Product>{ body ->
+            if (body.name.isNullOrBlank()) ValidationResult.Invalid("Invalid product name")
+            else if(body.price == null || body.price <= 0) ValidationResult.Invalid("Invalid price name")
+            else if(body.category.isNullOrBlank()) ValidationResult.Invalid("Invalid category name")
             else ValidationResult.Valid
         }
     }
