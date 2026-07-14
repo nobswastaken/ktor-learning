@@ -14,6 +14,12 @@ import kotlin.collections.mapOf
 fun Application.configureStatusPages() {
     install(StatusPages) {
 
+        status(HttpStatusCode.TooManyRequests){call, status ->
+            val retryAfter = call.response.headers["Retry-After"]
+            call.respondText(text = "429: Too many requests! Wait for $retryAfter seconds")
+        }
+
+
         exception<Throwable>{call,cause ->
             call.respondText("500: ${cause.message}", status = HttpStatusCode.InternalServerError )
         }

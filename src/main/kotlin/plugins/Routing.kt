@@ -4,6 +4,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.application.*
+import io.ktor.server.plugins.ratelimit.RateLimit
+import io.ktor.server.plugins.ratelimit.RateLimitName
+import io.ktor.server.plugins.ratelimit.rateLimit
 import io.ktor.server.plugins.requestvalidation.RequestValidation
 import io.ktor.server.plugins.requestvalidation.ValidationResult
 import io.ktor.server.request.receive
@@ -20,6 +23,32 @@ fun Application.configureRouting() {
 
 
     routing {
+
+        post("hello"){
+            val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
+            call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+        }
+
+        post("helloagain"){
+            val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
+            call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+        }
+
+        rateLimit (RateLimitName("public")){
+            post("public"){
+                val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
+                call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+            }
+        }
+
+        rateLimit(RateLimitName("protected")) {
+            post("protected") {
+                val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
+                call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+            }
+        }
+
+
         route("message") {
             install(RequestValidation) {
                 validate<String> { body ->
