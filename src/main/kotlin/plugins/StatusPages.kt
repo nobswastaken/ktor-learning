@@ -28,9 +28,9 @@ fun Application.configureStatusPages() {
             call.respond(HttpStatusCode.BadRequest, mapOf("errors" to cause.reasons))
         }
 
-        status(HttpStatusCode.Unauthorized) {call,cause ->
-            call.respondText ("401:You're not authorized to access this resource", status = HttpStatusCode.Unauthorized )
-        }
+//        status(HttpStatusCode.Unauthorized) {call,cause ->
+//            call.respondText ("401:You're not authorized to access this resource", status = HttpStatusCode.Unauthorized )
+//        }
 
         status(HttpStatusCode.BadRequest) {call,cause ->
             call.respondText ("400: Please check request body", status = HttpStatusCode.BadRequest )
@@ -40,6 +40,6 @@ fun Application.configureStatusPages() {
             call.respondText ("404: Page not found", status = HttpStatusCode.NotFound )
         }
 
-        statusFile(HttpStatusCode.BadRequest,HttpStatusCode.Unauthorized,HttpStatusCode.NotFound, filePattern = "errors/error#.html")
+        statusFile(HttpStatusCode.BadRequest,HttpStatusCode.NotFound, filePattern = "errors/error#.html")
     }
 }

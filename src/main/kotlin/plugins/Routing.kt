@@ -1,9 +1,15 @@
 package com.example.plugins
 
+import io.ktor.http.CacheControl
+import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.application.*
+import io.ktor.server.auth.authenticate
+import io.ktor.server.http.content.file
+import io.ktor.server.http.content.staticFiles
+import io.ktor.server.http.content.staticResources
 import io.ktor.server.plugins.ratelimit.RateLimit
 import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.ratelimit.rateLimit
@@ -24,67 +30,143 @@ fun Application.configureRouting() {
 
     routing {
 
-        post("hello"){
-            val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
-            call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
-        }
 
-        post("helloagain"){
-            val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
-            call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
-        }
-
-        rateLimit (RateLimitName("public")){
-            post("public"){
-                val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
-                call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+        authenticate ("digest-auth") {
+            get(""){
+                call.respondText("Hello world")
             }
         }
 
-        rateLimit(RateLimitName("protected")) {
-            post("protected") {
-                val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
-                call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
-            }
-        }
+//        staticResources("static", "static") {
+//            extensions("html")
+//        }
+//
+//        staticFiles("uploads", File("uploads")) {
+//            exclude { file -> file.path.contains("video") }
+//
+//            contentType { file ->
+//                when (file.name){
+//                    "testfile.txt" -> ContentType.Text.Html
+//                    else -> null
+//                }
+//            }
+//
+//            cacheControl { file ->
+//                when(file.name){
+//                    "testfile.txt" -> listOf(Immutable,CacheControl.MaxAge(10000))
+//                    else -> emptyList()
+//                }
+////                listOf(CacheControl.MaxAge(10000))
+//            }
+//
+//        }
 
 
-        route("message") {
-            install(RequestValidation) {
-                validate<String> { body ->
-                    if (body.isBlank()) ValidationResult.Invalid("Body is empty")
-                    else if (!body.startsWith("Hello")) ValidationResult.Invalid("Invalid message, queen")
-                    else ValidationResult.Valid
-                }
-            }
-            post{
-                val message = call.receive<String>()
-                call.respondText(message)
-            }
-        }
-
-        route("message2") {
-            install(RequestValidation) {
-                validate<String> { body ->
-                    if (body.isBlank()) ValidationResult.Invalid("Body is empty")
-                    else if (!body.startsWith("Ice cream")) ValidationResult.Invalid("Invalid message again, queen")
-                    else ValidationResult.Valid
-                }
-            }
-            post{
-                val message = call.receive<String>()
-                call.respondText(message)
-            }
-        }
 
 
-            post("product") {
-                val product = call.receive<Product>()
-                call.respond(product)
-            }
+
+//        get(""){
+//            call.respondText(
+//                  text = "hello world",
+//                contentType = ContentType.Text.Plain,
+//                status = HttpStatusCode.OK
+//            )
+//        }
+//
+//        get("products"){
+//            val response = ProductResponse(
+//                message = "Successfully fetched products",
+//                data = List(10){Product(name = "Apple", 10, category = "Fruits") }
+//            )
+//
+//            call.respond(response)
+//        }
+//
+//        get("stream"){
+//            val fileName = call.request.queryParameters["fileName"]?: ""
+//            val file = File("uploads/$fileName")
+//            if (file.exists()) return@get call.respond(HttpStatusCode.NotFound)
+//
+//            call.respondFile(file)
+//        }
+
+
+//
+//        post("hello"){
+//            val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
+//            call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+//        }
+//
+//        post("helloagain"){
+//            val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
+//            call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+//        }
+//
+//        rateLimit (RateLimitName("public")){
+//            post("public"){
+//                val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
+//                call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+//            }
+//        }
+//
+//        rateLimit(RateLimitName("protected")){
+//        post("protected"){
+//            val requestsLeft = call.response.headers["X-RateLimit-Remaining"]?.toInt() ?: 0
+//            call.respondText("Ice cream supremacy!, but you have $requestsLeft requests left")
+//        }
+//            }
+//
+//
+//        route("message") {
+//            install(RequestValidation) {
+//                validate<String> { body ->
+//                    if (body.isBlank()) ValidationResult.Invalid("Body is empty")
+//                    else if (!body.startsWith("Hello")) ValidationResult.Invalid("Invalid message, queen")
+//                    else ValidationResult.Valid
+//                }
+//            }
+//            post{
+//                val message = call.receive<String>()
+//                call.respondText(message)
+//            }
+//        }
+//
+//        route("message2") {
+//            install(RequestValidation) {
+//                validate<String> { body ->
+//                    if (body.isBlank()) ValidationResult.Invalid("Body is empty")
+//                    else if (!body.startsWith("Ice cream")) ValidationResult.Invalid("Invalid message again, queen")
+//                    else ValidationResult.Valid
+//                }
+//            }
+//            post{
+//                val message = call.receive<String>()
+//                call.respondText(message)
+//            }
+//        }
+//
+//
+//            post("product") {
+//                val product = call.receive<Product>()
+//                call.respond(product)
+//            }
 
         }
     }
+
+    object Immutable: CacheControl(null){
+        override fun toString(): String{
+            return "Immutable"
+        }
+    }
+
+
+    @Serializable
+    data class ProductResponse
+        (
+            val message: String,
+            val data: List<Product>
+         )
 
     @Serializable
     data class Product(

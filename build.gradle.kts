@@ -25,6 +25,10 @@ dependencies {
     implementation(libs.ktor.server.rate.limit)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.ktor.server.request.validation)
+    implementation(libs.ktor.server.auto.head.response)
+    implementation(libs.ktor.server.partial.content)
+    implementation(libs.ktor.server.auth)
+
 
     testImplementation(kotlin("test"))
     testImplementation(ktorLibs.server.testHost)

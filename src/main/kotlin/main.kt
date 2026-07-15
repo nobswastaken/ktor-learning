@@ -1,5 +1,9 @@
 package com.example
 
+import com.example.plugins.configureAuth
+import com.example.plugins.configureAutoHeadResponse
+import com.example.plugins.configureDigestAuth
+import com.example.plugins.configurePartialContent
 import com.example.plugins.configureRequestValidation
 import com.example.plugins.configureResources
 import com.example.plugins.configureRouting
@@ -15,9 +19,15 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     configurerateLimit()
+//    configureAuth()
+    configureDigestAuth()
     configureRouting()
     configureSerialization()
     configureResources()
     configureStatusPages()
     configureRequestValidation()
+    configureAutoHeadResponse()
+    configurePartialContent()
+
+
 }
