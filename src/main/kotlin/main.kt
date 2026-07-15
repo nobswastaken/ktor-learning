@@ -2,6 +2,7 @@ package com.example
 
 import com.example.plugins.configureAuth
 import com.example.plugins.configureAutoHeadResponse
+import com.example.plugins.configureBearerAuthentication
 import com.example.plugins.configureDigestAuth
 import com.example.plugins.configurePartialContent
 import com.example.plugins.configureRequestValidation
@@ -19,8 +20,9 @@ fun main(args: Array<String>) {
 
 fun Application.module() {
     configurerateLimit()
-//    configureAuth()
-    configureDigestAuth()
+//  configureAuth()
+//  configureDigestAuth()
+    configureBearerAuthentication()
     configureRouting()
     configureSerialization()
     configureResources()

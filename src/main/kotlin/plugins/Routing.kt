@@ -6,7 +6,9 @@ import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.application.*
+import io.ktor.server.auth.UserIdPrincipal
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.principal
 import io.ktor.server.http.content.file
 import io.ktor.server.http.content.staticFiles
 import io.ktor.server.http.content.staticResources
@@ -31,9 +33,11 @@ fun Application.configureRouting() {
     routing {
 
 
-        authenticate ("digest-auth") {
+        authenticate ("bearer-auth") {
             get(""){
-                call.respondText("Hello world")
+                val username = call.principal<UserIdPrincipal>()?.name
+
+                call.respondText("Hello $username!")
             }
         }
 
