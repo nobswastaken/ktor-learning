@@ -8,6 +8,7 @@ import io.ktor.http.content.forEachPart
 import io.ktor.server.application.*
 import io.ktor.server.auth.UserIdPrincipal
 import io.ktor.server.auth.authenticate
+import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 import io.ktor.server.http.content.file
 import io.ktor.server.http.content.staticFiles
@@ -30,7 +31,7 @@ import io.ktor.utils.io.copyAndClose
 import kotlinx.serialization.Serializable
 import java.io.File
 
-fun Application.configureRouting() {
+fun Application.configureRouting(config: JWTConfig) {
 
     val userDB = mutableMapOf<String, String>()
 
@@ -44,8 +45,9 @@ fun Application.configureRouting() {
                 call.respondText("Üser already exists")
             }else{
                 userDB[requestData.username] = requestData.password
-                call.sessions.set(UserSession(requestData.username))
-                call.respondText("User signup success")
+                val token = generateToken(config = config, username = requestData.username)
+
+                call.respond(mapOf("token" to token))
             }
         }
 
@@ -55,23 +57,22 @@ fun Application.configureRouting() {
                 ?: return@post call.respondText("User doesn't exist")
 
             if (storedPassword == requestData.password) {
-                call.sessions.set(UserSession(requestData.username))
-                call.respondText("Login success!")
+               val token = generateToken(config = config, username = requestData.username)
+                call.respond(mapOf("token" to token))
             }else{
                 call.respondText("Password is incorrect")
             }
          }
 
-        post("logout"){
-            call.sessions.clear<UserSession>()
-            call.respondText("Logged out")
-        }
 
-        authenticate ("session-auth") {
+
+        authenticate ("jwt-auth") {
             get(""){
-                val username = call.principal<UserSession>()?.username
+                val principal = call. principal<JWTPrincipal>()
+                val username = principal?.payload?.getClaim("username")?.asString()
+                val expiresAt = principal?.expiresAt?.time?.minus(System.currentTimeMillis())
 
-                call.respondText("Hello $username!")
+                call.respondText("Hello $username! The token expires after $expiresAt milliseconds")
             }
         }
 

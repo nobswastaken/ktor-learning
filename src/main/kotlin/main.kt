@@ -1,9 +1,11 @@
 package com.example
 
+import com.example.plugins.JWTConfig
 import com.example.plugins.configureAuth
 import com.example.plugins.configureAutoHeadResponse
 import com.example.plugins.configureBearerAuthentication
 import com.example.plugins.configureDigestAuth
+import com.example.plugins.configureJWTAuth
 import com.example.plugins.configurePartialContent
 import com.example.plugins.configureRequestValidation
 import com.example.plugins.configureResources
@@ -21,13 +23,30 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    val jwt = environment.config.config("ktor.jwt")
+    val realm = jwt.property("realm").getString()
+    val secret = jwt.property("secret").getString()
+    val issuer = jwt.property("issuer").getString()
+    val audience = jwt.property("audience").getString()
+    val tokenExpiry = jwt.property("expiry").getString().toLong()
+
+    val config = JWTConfig(
+        realm = realm,
+        issuer = issuer,
+        audience = audience,
+        tokenExpiry = tokenExpiry,
+        secret = secret
+    )
+
+
     configurerateLimit()
 //  configureAuth()
 //  configureDigestAuth()
 //    configureBearerAuthentication()
     configureSessions()
-    configureSessionAuth()
-    configureRouting()
+//    configureSessionAuth()
+    configureJWTAuth(config)
+    configureRouting(config)
     configureSerialization()
     configureResources()
     configureStatusPages()
