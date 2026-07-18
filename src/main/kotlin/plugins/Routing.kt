@@ -22,6 +22,9 @@ import io.ktor.server.request.receiveMultipart
 import io.ktor.server.request.receiveParameters
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.sessions.clear
+import io.ktor.server.sessions.sessions
+import io.ktor.server.sessions.set
 import io.ktor.util.cio.writeChannel
 import io.ktor.utils.io.copyAndClose
 import kotlinx.serialization.Serializable
@@ -29,13 +32,44 @@ import java.io.File
 
 fun Application.configureRouting() {
 
+    val userDB = mutableMapOf<String, String>()
 
     routing {
 
 
-        authenticate ("bearer-auth") {
+        post("signup"){
+            val requestData = call.receive<Authrequest>()
+
+            if(userDB.containsKey(requestData.username)){
+                call.respondText("Üser already exists")
+            }else{
+                userDB[requestData.username] = requestData.password
+                call.sessions.set(UserSession(requestData.username))
+                call.respondText("User signup success")
+            }
+        }
+
+        post("login"){
+            val requestData = call.receive<Authrequest>()
+            val storedPassword = userDB[requestData.username]
+                ?: return@post call.respondText("User doesn't exist")
+
+            if (storedPassword == requestData.password) {
+                call.sessions.set(UserSession(requestData.username))
+                call.respondText("Login success!")
+            }else{
+                call.respondText("Password is incorrect")
+            }
+         }
+
+        post("logout"){
+            call.sessions.clear<UserSession>()
+            call.respondText("Logged out")
+        }
+
+        authenticate ("session-auth") {
             get(""){
-                val username = call.principal<UserIdPrincipal>()?.name
+                val username = call.principal<UserSession>()?.username
 
                 call.respondText("Hello $username!")
             }
@@ -164,6 +198,12 @@ fun Application.configureRouting() {
         }
     }
 
+    @Serializable
+    data class Authrequest
+        (
+        val username: String,
+        val password: String
+    )
 
     @Serializable
     data class ProductResponse

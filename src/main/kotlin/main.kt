@@ -9,6 +9,8 @@ import com.example.plugins.configureRequestValidation
 import com.example.plugins.configureResources
 import com.example.plugins.configureRouting
 import com.example.plugins.configureSerialization
+import com.example.plugins.configureSessionAuth
+import com.example.plugins.configureSessions
 import com.example.plugins.configureStatusPages
 import com.example.plugins.configurerateLimit
 import io.ktor.server.engine.*
@@ -22,7 +24,9 @@ fun Application.module() {
     configurerateLimit()
 //  configureAuth()
 //  configureDigestAuth()
-    configureBearerAuthentication()
+//    configureBearerAuthentication()
+    configureSessions()
+    configureSessionAuth()
     configureRouting()
     configureSerialization()
     configureResources()
