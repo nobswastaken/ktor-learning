@@ -10,6 +10,7 @@ import com.example.plugins.configurePartialContent
 import com.example.plugins.configureRequestValidation
 import com.example.plugins.configureResources
 import com.example.plugins.configureRouting
+import com.example.plugins.configureSSE
 import com.example.plugins.configureSerialization
 import com.example.plugins.configureSessionAuth
 import com.example.plugins.configureSessions
@@ -59,6 +60,7 @@ fun Application.module() {
     configureSessions()
 //    configureSessionAuth()
     configureJWTAuth(config, httpClient)
+    configureSSE()
     configureRouting(config, httpClient)
     configureSerialization()
     configureResources()

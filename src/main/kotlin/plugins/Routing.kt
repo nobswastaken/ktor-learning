@@ -28,8 +28,12 @@ import io.ktor.server.routing.*
 import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
+import io.ktor.server.sse.sse
+import io.ktor.sse.ServerSentEvent
 import io.ktor.util.cio.writeChannel
 import io.ktor.utils.io.copyAndClose
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.time.delay
 import kotlinx.serialization.Serializable
 import java.io.File
 
@@ -39,6 +43,12 @@ fun Application.configureRouting(config: JWTConfig,httpClient: HttpClient ) {
 
     routing {
 
+        sse("events"){
+            repeat(6){
+                send(ServerSentEvent("Event: ${it + 1}"))
+                delay(1000L)
+            }
+        }
 
 
         authenticate("google-oauth"){
