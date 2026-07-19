@@ -29,19 +29,62 @@ import io.ktor.server.sessions.clear
 import io.ktor.server.sessions.sessions
 import io.ktor.server.sessions.set
 import io.ktor.server.sse.sse
+import io.ktor.server.websocket.webSocket
 import io.ktor.sse.ServerSentEvent
 import io.ktor.util.cio.writeChannel
 import io.ktor.utils.io.copyAndClose
+import io.ktor.websocket.CloseReason
+import io.ktor.websocket.WebSocketSession
+import io.ktor.websocket.close
+import io.ktor.websocket.readText
+import io.ktor.websocket.send
+import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.time.delay
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+import java.awt.Frame
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 
 fun Application.configureRouting(config: JWTConfig,httpClient: HttpClient ) {
 
     val userDB = mutableMapOf<String, UserInfo>()
 
+    val onlineUsers = ConcurrentHashMap<String, WebSocketSession>()
+
     routing {
+
+        webSocket ("chat"){
+            val username = call.request.queryParameters["username"] ?: run {
+                this.close(CloseReason(CloseReason.Codes.CANNOT_ACCEPT, "Username is required for establishing connection"))
+                return@webSocket
+            }
+
+            onlineUsers[username] = this
+            send("You are connected!")
+            try{
+                incoming.consumeEach{ frame ->
+                    if (frame is io.ktor.websocket.Frame.Text) {
+                        val message = Json.decodeFromString<Message>(frame.readText())
+                        if(message.to.isNullOrBlank()){
+                            onlineUsers.values.forEach {
+                                it.send("$username : ${message.text}")
+                            }
+                        }else{
+                            val session = onlineUsers[message.to]
+
+                            session?.send("$username : ${message.text}")
+                        }
+                    }
+                }
+            }finally{
+                    onlineUsers.remove(username)
+                this.close()
+            }
+
+
+        }
 
         sse("events"){
             repeat(6){
@@ -207,6 +250,14 @@ fun Application.configureRouting(config: JWTConfig,httpClient: HttpClient ) {
             return "Immutable"
         }
     }
+
+
+    @Serializable
+    data class Message(
+        val text: String,
+        val to:String? = null,
+    )
+
 
     @Serializable
     data class Authrequest

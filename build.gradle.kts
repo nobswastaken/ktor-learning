@@ -31,6 +31,7 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.server.sessions)
     implementation(libs.ktor.server.sse)
+    implementation(libs.ktor.server.websockets)
 
     implementation(libs.ktor.client.core)
     implementation(libs.ktor.client.cio)

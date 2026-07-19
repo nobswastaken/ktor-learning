@@ -15,6 +15,7 @@ import com.example.plugins.configureSerialization
 import com.example.plugins.configureSessionAuth
 import com.example.plugins.configureSessions
 import com.example.plugins.configureStatusPages
+import com.example.plugins.configureWebsockets
 import com.example.plugins.configurerateLimit
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
@@ -61,6 +62,7 @@ fun Application.module() {
 //    configureSessionAuth()
     configureJWTAuth(config, httpClient)
     configureSSE()
+    configureWebsockets()
     configureRouting(config, httpClient)
     configureSerialization()
     configureResources()
