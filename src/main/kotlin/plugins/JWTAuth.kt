@@ -2,6 +2,7 @@ package com.example.plugins
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import io.ktor.client.HttpClient
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.application.Application
 import io.ktor.server.application.install
@@ -11,7 +12,7 @@ import io.ktor.server.auth.jwt.jwt
 import io.ktor.server.response.respondText
 import java.util.Date
 
-fun Application.configureJWTAuth(config:JWTConfig) {
+fun Application.configureJWTAuth(config:JWTConfig, httpClient: HttpClient) {
     install(Authentication) {
         jwt("jwt-auth"){
             realm = config.realm
@@ -36,6 +37,7 @@ fun Application.configureJWTAuth(config:JWTConfig) {
                     status = HttpStatusCode.Unauthorized)
             }
         }
+        configureGoogleOAuth(httpClient)
     }
 }
 

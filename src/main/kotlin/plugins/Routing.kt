@@ -1,11 +1,13 @@
 package com.example.plugins
 
+import io.ktor.client.HttpClient
 import io.ktor.http.CacheControl
 import io.ktor.http.ContentType
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.content.PartData
 import io.ktor.http.content.forEachPart
 import io.ktor.server.application.*
+import io.ktor.server.auth.OAuthAccessTokenResponse
 import io.ktor.server.auth.UserIdPrincipal
 import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
@@ -31,38 +33,35 @@ import io.ktor.utils.io.copyAndClose
 import kotlinx.serialization.Serializable
 import java.io.File
 
-fun Application.configureRouting(config: JWTConfig) {
+fun Application.configureRouting(config: JWTConfig,httpClient: HttpClient ) {
 
-    val userDB = mutableMapOf<String, String>()
+    val userDB = mutableMapOf<String, UserInfo>()
 
     routing {
 
 
-        post("signup"){
-            val requestData = call.receive<Authrequest>()
 
-            if(userDB.containsKey(requestData.username)){
-                call.respondText("Üser already exists")
-            }else{
-                userDB[requestData.username] = requestData.password
-                val token = generateToken(config = config, username = requestData.username)
+        authenticate("google-oauth"){
+            get("login"){
+                //
+                }
 
-                call.respond(mapOf("token" to token))
+            get("callback"){
+                val principal: OAuthAccessTokenResponse.OAuth2? = call.principal()
+                if (principal == null){
+                    call.respondText("OAUTH failed", status = HttpStatusCode.Unauthorized)
+                    return@get
+                }
+                val accessToken = principal.accessToken
+                val userInfo = fetchGoogleUserInfo(httpClient = httpClient, accessToken = accessToken)
+
+                if (userInfo != null){
+                    userDB[userInfo.userId] = userInfo
+                    val token = generateToken(config, username = userInfo.userId)
+                    call.respond(mapOf("token" to token))
+                }
             }
         }
-
-        post("login"){
-            val requestData = call.receive<Authrequest>()
-            val storedPassword = userDB[requestData.username]
-                ?: return@post call.respondText("User doesn't exist")
-
-            if (storedPassword == requestData.password) {
-               val token = generateToken(config = config, username = requestData.username)
-                call.respond(mapOf("token" to token))
-            }else{
-                call.respondText("Password is incorrect")
-            }
-         }
 
 
 
@@ -70,9 +69,9 @@ fun Application.configureRouting(config: JWTConfig) {
             get(""){
                 val principal = call. principal<JWTPrincipal>()
                 val username = principal?.payload?.getClaim("username")?.asString()
-                val expiresAt = principal?.expiresAt?.time?.minus(System.currentTimeMillis())
+                val userInfo = userDB[username] ?: mapOf("error" to true)
 
-                call.respondText("Hello $username! The token expires after $expiresAt milliseconds")
+                call.respond(userInfo)
             }
         }
 

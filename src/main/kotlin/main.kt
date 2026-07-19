@@ -15,14 +15,27 @@ import com.example.plugins.configureSessionAuth
 import com.example.plugins.configureSessions
 import com.example.plugins.configureStatusPages
 import com.example.plugins.configurerateLimit
+import io.ktor.client.HttpClient
+import io.ktor.client.engine.cio.CIO
+import io.ktor.serialization.kotlinx.json.json
 import io.ktor.server.engine.*
 import io.ktor.server.application.*
+import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
+import kotlinx.serialization.json.Json
 
 fun main(args: Array<String>) {
     io.ktor.server.netty.EngineMain.main(args)
 }
 
 fun Application.module() {
+
+    val httpClient = HttpClient(CIO){
+        install(ContentNegotiation) {
+            json(Json{
+                ignoreUnknownKeys = true
+            })
+        }
+    }
     val jwt = environment.config.config("ktor.jwt")
     val realm = jwt.property("realm").getString()
     val secret = jwt.property("secret").getString()
@@ -45,8 +58,8 @@ fun Application.module() {
 //    configureBearerAuthentication()
     configureSessions()
 //    configureSessionAuth()
-    configureJWTAuth(config)
-    configureRouting(config)
+    configureJWTAuth(config, httpClient)
+    configureRouting(config, httpClient)
     configureSerialization()
     configureResources()
     configureStatusPages()
